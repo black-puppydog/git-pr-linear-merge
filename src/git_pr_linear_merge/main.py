@@ -267,6 +267,7 @@ def run():
     )
     parser.add_argument('-t', '--token', help='Github access token to use')
     parser.add_argument('-v', '--verbose', action='store_true', help="Verbose output")
+    parser.add_argument('-r', '--remote', default='origin', help='In which remote to look for PRs.')
     subparsers = parser.add_subparsers(title='Commands', dest='cmd')
     subparsers.required = True
     list_command_parser = subparsers.add_parser('list', aliases=['ls'])
@@ -303,10 +304,14 @@ def run():
         log.error('This is not a Github repository')
         exit(1)
 
+    pr_remote = next(git_repo.remotes[args['remote']].urls)
+    if 'github.com' not in pr_remote:
+        log.error(f'Remote "{args["remote"]}" with url {pr_remote} is not a github repository.')
+        exit(1)
     # Parse github repo name from remote url:
     # https://github.com/spatialsys/Spatial-2.0.git
     # git@github.com:spatialsys/Spatial-2.0.git
-    github_repo_name = re.search(r'.*[:/](.*/.*)\.git', github_remote_urls[0]).group(1)
+    github_repo_name = re.search(r'.*[:/](.*/.*)\.git', pr_remote).group(1)
 
     # Github setup
     github = Github(github_access_token)
